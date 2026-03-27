@@ -1,0 +1,5 @@
+{
+  "name": "Dashboard IGD 2026",
+  "description": "Dashboard monitoring data pasien Instalasi Gawat Darurat (IGD) yang terintegrasi dengan Google Sheets.",
+  "requestFramePermissions": []
+}
