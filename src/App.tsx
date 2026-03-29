@@ -77,6 +77,7 @@ const generateMockData = (): PatientRecord[] => {
       kode_diagnosa: 'A00',
       status: statuses[Math.floor(Math.random() * statuses.length)],
       dokter: `Dr. ${['Budi', 'Siti', 'Andi', 'Lina'][Math.floor(Math.random() * 4)]}`,
+      dpjp: `Dr. ${['Ahmad', 'Zaki', 'Dewi', 'Rina'][Math.floor(Math.random() * 4)]}`,
       waktu_kedatangan: date.toISOString(),
       poli: polis[Math.floor(Math.random() * polis.length)],
       penjamin: penjamins[Math.floor(Math.random() * penjamins.length)],
@@ -265,6 +266,7 @@ const PatientTable = ({ patients }: { patients: PatientRecord[] }) => {
             <th className="px-6 py-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">JK / Umur</th>
             <th className="px-6 py-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Instalasi</th>
             <th className="px-6 py-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Penjamin</th>
+            <th className="px-6 py-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">DPJP</th>
             <th className="px-6 py-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Kode</th>
             <th className="px-6 py-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Diagnosa</th>
           </tr>
@@ -279,6 +281,7 @@ const PatientTable = ({ patients }: { patients: PatientRecord[] }) => {
               <td className="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">{p.jk} / {p.umur} th</td>
               <td className="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">{p.poli}</td>
               <td className="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">{p.penjamin}</td>
+              <td className="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">{p.dpjp}</td>
               <td className="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">{p.kode_diagnosa}</td>
               <td className="px-6 py-4 text-sm text-slate-500 dark:text-slate-400 max-w-[300px] truncate">{p.diagnosa}</td>
             </tr>
@@ -579,6 +582,9 @@ export default function App() {
             const status = (idxStatus !== -1 && row[idxStatus] ? row[idxStatus] : 'Selesai') || 'Selesai';
             const dokter = (idxDokter !== -1 && row[idxDokter] ? row[idxDokter] : '-') || '-';
             
+            // Kolom K (index 10) for DPJP
+            const dpjp = (row.length > 10 ? row[10] : '-') || '-';
+            
             // Kolom J (index 9) for IGD
             const poli = (row.length > 9 ? row[9] : 'UMUM') || 'UMUM';
             
@@ -612,6 +618,7 @@ export default function App() {
               kode_diagnosa,
               status,
               dokter,
+              dpjp,
               waktu_kedatangan: timestamp,
               poli,
               penjamin,
@@ -682,12 +689,14 @@ export default function App() {
     const ageGroups: Record<string, number> = {};
     const poliCounts: Record<string, number> = {};
     const penjaminCounts: Record<string, number> = {};
+    const dpjpCounts: Record<string, number> = {};
     const dayCounts: Record<string, number> = { 'Senin': 0, 'Selasa': 0, 'Rabu': 0, 'Kamis': 0, 'Jumat': 0, 'Sabtu': 0, 'Minggu': 0 };
     const monthCounts: Record<string, number> = {};
     const penjaminByMonth: Record<string, Record<string, number>> = {};
     const ageGroupByMonth: Record<string, Record<string, number>> = {};
     const statusByMonth: Record<string, Record<string, number>> = {};
     const caraKeluarByMonth: Record<string, Record<string, number>> = {};
+    const dpjpByMonth: Record<string, Record<string, number>> = {};
     const caraKeluarCounts: Record<string, number> = {};
     const monthsSet = new Set<string>();
 
@@ -706,6 +715,9 @@ export default function App() {
       
       const penjaminLabel = p.penjamin || 'UMUM';
       penjaminCounts[penjaminLabel] = (penjaminCounts[penjaminLabel] || 0) + 1;
+
+      const dpjpLabel = p.dpjp || '-';
+      dpjpCounts[dpjpLabel] = (dpjpCounts[dpjpLabel] || 0) + 1;
 
       try {
         const date = new Date(p.timestamp);
@@ -733,6 +745,9 @@ export default function App() {
           const caraKeluarLabel = p.cara_keluar || '-';
           if (!caraKeluarByMonth[caraKeluarLabel]) caraKeluarByMonth[caraKeluarLabel] = {};
           caraKeluarByMonth[caraKeluarLabel][monthName] = (caraKeluarByMonth[caraKeluarLabel][monthName] || 0) + 1;
+          
+          if (!dpjpByMonth[dpjpLabel]) dpjpByMonth[dpjpLabel] = {};
+          dpjpByMonth[dpjpLabel][monthName] = (dpjpByMonth[dpjpLabel][monthName] || 0) + 1;
           
           caraKeluarCounts[caraKeluarLabel] = (caraKeluarCounts[caraKeluarLabel] || 0) + 1;
         }
@@ -790,10 +805,12 @@ export default function App() {
       topPoli,
       topPenjamin,
       topDiagnoses,
+      dpjpCounts: Object.entries(dpjpCounts).sort((a, b) => b[1] - a[1]).map(([name, value]) => ({ name, value })),
       penjaminByMonth,
       ageGroupByMonth,
       statusByMonth,
       caraKeluarByMonth,
+      dpjpByMonth,
       caraKeluarCounts: [
         'Atas Permintaan Sendiri (PAPS)',
         'Atas Persetujuan Dokter (PBJ)',
@@ -836,7 +853,7 @@ export default function App() {
             </div>
           )}
           <nav className="flex items-center gap-1 bg-slate-100/50 dark:bg-slate-800/50 p-1 rounded-lg">
-            {['Overview', 'Diagnosa', 'Cara Keluar', 'Periode'].map(tab => (
+            {['Overview', 'Diagnosa', 'Cara Keluar', 'DPJP', 'Periode'].map(tab => (
               <NavTab 
                 key={tab} 
                 label={tab} 
@@ -1123,12 +1140,12 @@ export default function App() {
               </p>
             </div>
 
-            <ChartContainer title={diagnosaLimit === 'All' ? "Semua Diagnosa" : `Top ${diagnosaLimit} Diagnosa Terbanyak`} icon={Activity} color="text-blue-500">
-              <ResponsiveContainer width="100%" height={diagnosaLimit === 'All' ? Math.max(400, stats.topDiagnoses.length * 25) : 400}>
-                <BarChart data={stats.topDiagnoses} layout="vertical" margin={{ left: 150, right: 60 }}>
+            <ChartContainer title={diagnosaLimit === 'All' ? "Semua Diagnosa" : `Top ${diagnosaLimit} Diagnosa Terbanyak`} icon={Activity} color="text-blue-500" height={diagnosaLimit === 'All' ? `min-h-[${Math.max(400, stats.topDiagnoses.length * 30)}px]` : "min-h-[500px]"}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={stats.topDiagnoses} layout="vertical" margin={{ left: 180, right: 60 }}>
                   <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
                   <XAxis type="number" hide />
-                  <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fill: COLORS.muted, fontSize: 10 }} width={140} />
+                  <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fill: COLORS.muted, fontSize: 10 }} width={180} />
                   <Tooltip />
                   <Bar 
                     dataKey="value" 
@@ -1211,6 +1228,81 @@ export default function App() {
             />
           </div>
         )}
+
+        {activeTab === 'DPJP' && (() => {
+          const topDPJP = stats.dpjpCounts.slice(0, 10);
+          const otherDPJPValue = stats.dpjpCounts.slice(10).reduce((sum, d) => sum + d.value, 0);
+          const dpjpPieData = otherDPJPValue > 0 
+            ? [...topDPJP, { name: 'Lain-lain', value: otherDPJPValue }]
+            : topDPJP;
+
+          return (
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <ChartContainer title="Distribusi Kunjungan Berdasarkan DPJP" icon={Activity} color="text-indigo-500" height={`min-h-[${Math.max(400, stats.dpjpCounts.length * 40)}px]`}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={stats.dpjpCounts} layout="vertical" margin={{ left: 220, right: 60 }}>
+                      <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+                      <XAxis type="number" hide />
+                      <YAxis 
+                        dataKey="name" 
+                        type="category" 
+                        axisLine={false} 
+                        tickLine={false} 
+                        tick={{ fill: COLORS.muted, fontSize: 10 }} 
+                        width={220}
+                        interval={0}
+                      />
+                      <Tooltip />
+                      <Bar 
+                        dataKey="value" 
+                        fill="#6366f1" 
+                        radius={[0, 4, 4, 0]} 
+                        barSize={20}
+                        label={showNumbers ? { position: 'right', fill: COLORS.muted, fontSize: 10 } : false}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+
+                <ChartContainer title="Persentase Kunjungan Berdasarkan DPJP" icon={PieChart} color="text-indigo-500">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+                      <Pie
+                        data={dpjpPieData.filter(d => d.value > 0)}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={50}
+                        outerRadius={80}
+                        paddingAngle={5}
+                        dataKey="value"
+                        label={showNumbers ? ({ name, value }) => `${name}: ${value}` : false}
+                      >
+                        {dpjpPieData.filter(d => d.value > 0).map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={[
+                            '#6366f1', '#818cf8', '#a5b4fc', '#c7d2fe', '#e0e7ff', '#eef2ff'
+                          ][index % 6]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                      <Legend verticalAlign="bottom" height={36} iconType="circle" />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+              </div>
+
+              <PeriodeTable 
+                title="Jumlah Kunjungan Berdasarkan DPJP Per Periode"
+                subtitle="Rekapitulasi kunjungan bulanan berdasarkan Dokter Penanggung Jawab Pelayanan (Kolom K)"
+                data={stats.dpjpByMonth}
+                months={stats.months}
+                rowLabel="Nama DPJP"
+                showTotalRow={true}
+                accentColor="text-indigo-600"
+              />
+            </div>
+          );
+        })()}
 
         {activeTab === 'Periode' && (
           <div className="space-y-6">

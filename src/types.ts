@@ -7,6 +7,7 @@ export interface PatientRecord {
   kode_diagnosa: string;
   status: string;
   dokter: string;
+  dpjp: string;
   waktu_kedatangan: string;
   poli: string;
   penjamin: string;
@@ -25,10 +26,12 @@ export interface DashboardStats {
   topPoli: string;
   topPenjamin: string;
   topDiagnoses: { name: string; value: number }[];
+  dpjpCounts: { name: string; value: number }[];
   penjaminByMonth: Record<string, Record<string, number>>;
   ageGroupByMonth: Record<string, Record<string, number>>;
   statusByMonth: Record<string, Record<string, number>>;
   caraKeluarByMonth: Record<string, Record<string, number>>;
+  dpjpByMonth: Record<string, Record<string, number>>;
   caraKeluarCounts: { name: string; value: number }[];
   months: string[];
 }
