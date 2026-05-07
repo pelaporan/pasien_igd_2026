@@ -120,7 +120,7 @@ const KPICard = ({ title, value, icon: Icon, color, subtitle }: { title: string;
   </motion.div>
 );
 
-const ChartContainer = ({ title, children, icon: Icon, color, height = "min-h-[300px]" }: { title: string; children: React.ReactNode; icon: any; color: string; height?: string }) => {
+const ChartContainer = ({ title, children, icon: Icon, color, height = "350px", style }: { title: string; children: React.ReactNode; icon: any; color: string; height?: string; style?: React.CSSProperties }) => {
   const chartRef = React.useRef<HTMLDivElement>(null);
 
   const handleDownloadPNG = async () => {
@@ -134,11 +134,17 @@ const ChartContainer = ({ title, children, icon: Icon, color, height = "min-h-[3
     }
   };
 
+  const combinedStyle: React.CSSProperties = {
+    height: height && !height.startsWith('min-h') ? height : undefined,
+    minHeight: height && height.startsWith('min-h') ? undefined : '300px',
+    ...style
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col h-full"
+      className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col w-full min-w-0"
     >
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
@@ -153,7 +159,7 @@ const ChartContainer = ({ title, children, icon: Icon, color, height = "min-h-[3
           <Download className="w-4 h-4" />
         </button>
       </div>
-      <div ref={chartRef} className={cn("flex-1", height)}>
+      <div ref={chartRef} className={cn("w-full relative")} style={combinedStyle}>
         {children}
       </div>
     </motion.div>
@@ -778,8 +784,20 @@ export default function App() {
       filteredPatients.reduce((acc, p) => {
         const d = p.diagnosa?.trim();
         const k = p.kode_diagnosa?.trim();
-        if (d && d !== '-' && d !== '') {
-          const label = k && k !== '-' ? `${k} - ${d}` : d;
+        
+        let label = '';
+        const hasD = d && d !== '-' && d !== '';
+        const hasK = k && k !== '-' && k !== '';
+        
+        if (hasK && hasD) {
+          label = `${k} - ${d}`;
+        } else if (hasK) {
+          label = k;
+        } else if (hasD) {
+          label = d;
+        }
+        
+        if (label) {
           acc[label] = (acc[label] || 0) + 1;
         }
         return acc;
@@ -1028,8 +1046,8 @@ export default function App() {
             </div>
 
             {/* Charts Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <ChartContainer title="Tren Kunjungan Bulanan" icon={TrendingUp} color="text-blue-500">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+              <ChartContainer title="Tren Kunjungan Bulanan" icon={TrendingUp} color="text-blue-500" height="400px">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={stats.monthlyArrivals} margin={{ top: 30, right: 30, left: 20, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
@@ -1051,7 +1069,7 @@ export default function App() {
                 </ResponsiveContainer>
               </ChartContainer>
 
-              <ChartContainer title="Kunjungan Jenis Kelamin" icon={Users} color="text-pink-500">
+              <ChartContainer title="Kunjungan Jenis Kelamin" icon={Users} color="text-pink-500" height="400px">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
                     <Pie
@@ -1074,7 +1092,7 @@ export default function App() {
                 </ResponsiveContainer>
               </ChartContainer>
 
-              <ChartContainer title="Kunjungan Berdasarkan Kategori Umur" icon={Users} color="text-emerald-500" height="min-h-[600px]">
+              <ChartContainer title="Kunjungan Berdasarkan Kategori Umur" icon={Users} color="text-emerald-500" height="600px">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={stats.ageGroups} layout="vertical" margin={{ left: 140, right: 60 }}>
                     <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
@@ -1092,7 +1110,7 @@ export default function App() {
                 </ResponsiveContainer>
               </ChartContainer>
 
-              <ChartContainer title="Kunjungan Berdasarkan Hari Kunjungan" icon={Clock} color="text-orange-500">
+              <ChartContainer title="Kunjungan Berdasarkan Hari Kunjungan" icon={Clock} color="text-orange-500" height="400px">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={stats.dayArrivals} margin={{ top: 30, right: 30, left: 20, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
@@ -1136,35 +1154,59 @@ export default function App() {
                 ))}
               </div>
               <p className="text-xs text-slate-400 dark:text-slate-500 font-medium italic">
-                Menampilkan {diagnosaLimit === 'All' ? 'semua' : `top ${diagnosaLimit}`} diagnosa yang dikombinasikan dengan kode ICD-10
+                Menampilkan {diagnosaLimit === 'All' ? 'semua' : `top ${diagnosaLimit}`} diagnosa dari {stats.topDiagnoses.length} diagnosa unik yang ditemukan
               </p>
             </div>
 
-            <ChartContainer title={diagnosaLimit === 'All' ? "Semua Diagnosa" : `Top ${diagnosaLimit} Diagnosa Terbanyak`} icon={Activity} color="text-blue-500" height={diagnosaLimit === 'All' ? `min-h-[${Math.max(400, stats.topDiagnoses.length * 30)}px]` : "min-h-[500px]"}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={stats.topDiagnoses} layout="vertical" margin={{ left: 180, right: 60 }}>
-                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
-                  <XAxis type="number" hide />
-                  <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fill: COLORS.muted, fontSize: 10 }} width={180} />
-                  <Tooltip />
-                  <Bar 
-                    dataKey="value" 
-                    fill={COLORS.blue} 
-                    radius={[0, 4, 4, 0]} 
-                    barSize={20}
-                    label={showNumbers ? { position: 'right', fill: COLORS.muted, fontSize: 10 } : false}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-            <PatientTable patients={filteredPatients.filter(p => p.diagnosa && p.diagnosa.trim() !== '-' && p.diagnosa.trim() !== '')} />
+            {stats.topDiagnoses.length > 0 ? (
+              <ChartContainer 
+                title={diagnosaLimit === 'All' ? "Semua Diagnosa" : `Top ${diagnosaLimit} Diagnosa Terbanyak`} 
+                icon={Activity} 
+                color="text-blue-500" 
+                style={{ height: diagnosaLimit === 'All' ? `${Math.max(500, stats.topDiagnoses.length * 35)}px` : '500px' }}
+              >
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={stats.topDiagnoses} layout="vertical" margin={{ left: 180, right: 60 }}>
+                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+                    <XAxis type="number" />
+                    <YAxis 
+                      dataKey="name" 
+                      type="category" 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{ fill: COLORS.muted, fontSize: 10 }} 
+                      width={180} 
+                      interval={0}
+                    />
+                    <Tooltip />
+                    <Bar 
+                      dataKey="value" 
+                      fill={COLORS.blue} 
+                      radius={[0, 4, 4, 0]} 
+                      barSize={20}
+                      label={showNumbers ? { position: 'right', fill: COLORS.muted, fontSize: 10 } : false}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </ChartContainer>
+            ) : (
+              <div className="bg-white dark:bg-slate-900 p-12 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center text-center">
+                <Activity className="w-12 h-12 text-slate-300 dark:text-slate-700 mb-4" />
+                <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-1">Tidak Ada Data Diagnosa</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400">Pastikan file sumber memiliki data pada kolom diagnosa.</p>
+              </div>
+            )}
+            <PatientTable patients={filteredPatients.filter(p => 
+              (p.diagnosa && p.diagnosa.trim() !== '-' && p.diagnosa.trim() !== '') || 
+              (p.kode_diagnosa && p.kode_diagnosa.trim() !== '-' && p.kode_diagnosa.trim() !== '')
+            )} />
           </div>
         )}
 
         {activeTab === 'Cara Keluar' && (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <ChartContainer title="Distribusi Cara Keluar" icon={Activity} color="text-purple-500">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+              <ChartContainer title="Distribusi Cara Keluar" icon={Activity} color="text-purple-500" height="400px">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={stats.caraKeluarCounts} layout="vertical" margin={{ left: 180, right: 60 }}>
                     <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
@@ -1182,7 +1224,7 @@ export default function App() {
                 </ResponsiveContainer>
               </ChartContainer>
 
-              <ChartContainer title="Persentase Cara Keluar" icon={PieChart} color="text-purple-500">
+              <ChartContainer title="Persentase Cara Keluar" icon={PieChart} color="text-purple-500" height="400px">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
                     <Pie
@@ -1239,7 +1281,12 @@ export default function App() {
           return (
             <div className="space-y-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <ChartContainer title="Distribusi Kunjungan Berdasarkan DPJP" icon={Activity} color="text-indigo-500" height={`min-h-[${Math.max(400, stats.dpjpCounts.length * 40)}px]`}>
+                <ChartContainer 
+                  title="Distribusi Kunjungan Berdasarkan DPJP" 
+                  icon={Activity} 
+                  color="text-indigo-500" 
+                  style={{ height: `${Math.max(400, stats.dpjpCounts.length * 40)}px` }}
+                >
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={stats.dpjpCounts} layout="vertical" margin={{ left: 220, right: 60 }}>
                       <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
@@ -1265,7 +1312,7 @@ export default function App() {
                   </ResponsiveContainer>
                 </ChartContainer>
 
-                <ChartContainer title="Persentase Kunjungan Berdasarkan DPJP" icon={PieChart} color="text-indigo-500">
+                <ChartContainer title="Persentase Kunjungan Berdasarkan DPJP" icon={PieChart} color="text-indigo-500" height="450px">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
                       <Pie
