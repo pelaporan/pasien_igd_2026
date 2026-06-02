@@ -87,7 +87,7 @@ const generateMockData = (): PatientRecord[] => {
         '30-34 tahun', '35-39 tahun', '40-44 tahun', '45-49 tahun', '50-54 tahun', '55-59 tahun',
         '60-64 tahun', '65-69 tahun', '70-74 tahun', '75-79 tahun', '80-84 tahun', '85 tahun ke atas'
       ][Math.floor(Math.random() * 24)],
-      status_pasien: ['ADMEDIKA', 'BPJS KESEHATAN', 'BPJS KETENAGAKERJAAN', 'JASA RAHARJA', 'PAS PULA', 'UMUM'][Math.floor(Math.random() * 6)],
+      status_pasien: ['ADMEDIKA', 'BPJS KESEHATAN', 'BPJS UHC','BPJS KETENAGAKERJAAN', 'JASA RAHARJA', 'PAS PULA', 'UMUM'][Math.floor(Math.random() * 7)],
       cara_keluar: [
         'Atas Permintaan Sendiri (PAPS)',
         'Atas Persetujuan Dokter (PBJ)',
@@ -1392,7 +1392,7 @@ export default function App() {
               rowLabel="Status Pasien"
               showTotalRow={true}
               accentColor="text-blue-600"
-              rowOrder={['ADMEDIKA', 'BPJS KESEHATAN', 'BPJS KETENAGAKERJAAN', 'JASA RAHARJA', 'PAS PULA', 'UMUM']}
+              rowOrder={['ADMEDIKA', 'BPJS KESEHATAN','BPJS UHC', 'BPJS KETENAGAKERJAAN', 'JASA RAHARJA', 'PAS PULA', 'MANDIRI InHealth','UMUM']}
             />
           </div>
         )}
